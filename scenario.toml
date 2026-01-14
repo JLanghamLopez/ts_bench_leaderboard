@@ -1,16 +1,12 @@
 [green_agent]
-agentbeats_id = ""
-env = { API_KEY = "${GITHUB_SECRET_NAME}", LOG_LEVEL = "INFO" }
+agentbeats_id = "019bbd9d-1a8a-7cd2-a043-d6b513e03042"
+env = { LOG_LEVEL = "INFO" }
 
-[[participants]]
+[participant]
 agentbeats_id = ""
-name = "role_1_name"
-env = {}
-
-[[participants]]
-agentbeats_id = ""
-name = "role_2_name"
+name = "participant"
 env = {}
 
 [config]
-# Add your assessment config here
+# "time-series-generation" or "time-series-forecasting"
+task_type = "time-series-forecasting"
