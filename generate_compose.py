@@ -144,19 +144,13 @@ def parse_scenario(scenario_path: Path) -> dict[str, Any]:
     green = data.get("green_agent", {})
     resolve_image(green, "green_agent")
 
-    participants = data.get("participants", [])
+    participant = data.get("participant", None)
+
+    assert participant is not None, "Participant required"
 
     # Check for duplicate participant names
-    names = [p.get("name") for p in participants]
-    duplicates = [name for name in set(names) if names.count(name) > 1]
-    if duplicates:
-        print(f"Error: Duplicate participant names found: {', '.join(duplicates)}")
-        print("Each participant must have a unique name.")
-        sys.exit(1)
-
-    for participant in participants:
-        name = participant.get("name", "unknown")
-        resolve_image(participant, f"participant '{name}'")
+    name = participant.get("name", "unknown")
+    resolve_image(participant, f"participant '{name}'")
 
     return data
 
@@ -177,9 +171,11 @@ def format_depends_on(services: list) -> str:
 
 def generate_docker_compose(scenario: dict[str, Any]) -> str:
     green = scenario["green_agent"]
-    participants = scenario.get("participants", [])
+    participant = scenario.get("participant", None)
 
-    participant_names = [p["name"] for p in participants]
+    assert participant is not None, "Participant required"
+
+    participant_names = [participant["name"]]
 
     participant_services = "\n".join([
         PARTICIPANT_TEMPLATE.format(
@@ -188,7 +184,7 @@ def generate_docker_compose(scenario: dict[str, Any]) -> str:
             port=DEFAULT_PORT,
             env=format_env_vars(p.get("env", {}))
         )
-        for p in participants
+        for p in [participant]
     ])
 
     all_services = ["green-agent"] + participant_names
@@ -205,18 +201,17 @@ def generate_docker_compose(scenario: dict[str, Any]) -> str:
 
 def generate_a2a_scenario(scenario: dict[str, Any]) -> str:
     green = scenario["green_agent"]
-    participants = scenario.get("participants", [])
+    participant = scenario.get("participant", None)
 
-    participant_lines = []
-    for p in participants:
-        lines = [
-            f"[[participants]]",
-            f"role = \"{p['name']}\"",
-            f"endpoint = \"http://{p['name']}:{DEFAULT_PORT}\"",
-        ]
-        if "agentbeats_id" in p:
-            lines.append(f"agentbeats_id = \"{p['agentbeats_id']}\"")
-        participant_lines.append("\n".join(lines) + "\n")
+    assert participant is not None
+
+    participant_lines = [
+        f"[participant]",
+        f"role = \"{participant['name']}\"",
+        f"endpoint = \"http://{participant['name']}:{DEFAULT_PORT}\"",
+    ]
+    if "agentbeats_id" in participant:
+        participant_lines.append(f"agentbeats_id = \"{participant['agentbeats_id']}\"")
 
     config_section = scenario.get("config", {})
     config_lines = [tomli_w.dumps({"config": config_section})]
@@ -280,6 +275,7 @@ def main():
         print(f"Generated {ENV_PATH}")
 
     print(f"Generated {COMPOSE_PATH} and {A2A_SCENARIO_PATH}")
+
 
 if __name__ == "__main__":
     main()
