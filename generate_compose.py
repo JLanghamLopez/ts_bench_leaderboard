@@ -65,11 +65,11 @@ services:
     command: ["--host", "0.0.0.0", "--port", "{green_port}", "--card-url", "http://green-agent:{green_port}"]
     environment:{green_env}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:{green_port}/.well-known/agent-card.json"]
-      interval: 5s
-      timeout: 3s
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:{green_port}/.well-known/agent-card.json"]
+      interval: 10s
+      timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 60s
     depends_on:{green_depends}
     networks:
       - agent-network
@@ -99,11 +99,11 @@ PARTICIPANT_TEMPLATE = """  {name}:
     command: ["--host", "0.0.0.0", "--port", "{port}", "--card-url", "http://{name}:{port}"]
     environment:{env}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:{port}/.well-known/agent-card.json"]
-      interval: 5s
-      timeout: 3s
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:{port}/.well-known/agent-card.json"]
+      interval: 10s
+      timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 60s
     networks:
       - agent-network
 """
@@ -144,13 +144,19 @@ def parse_scenario(scenario_path: Path) -> dict[str, Any]:
     green = data.get("green_agent", {})
     resolve_image(green, "green_agent")
 
-    participant = data.get("participant", None)
-
-    assert participant is not None, "Participant required"
+    participants = data.get("participants", [])
 
     # Check for duplicate participant names
-    name = participant.get("name", "unknown")
-    resolve_image(participant, f"participant '{name}'")
+    names = [p.get("name") for p in participants]
+    duplicates = [name for name in set(names) if names.count(name) > 1]
+    if duplicates:
+        print(f"Error: Duplicate participant names found: {', '.join(duplicates)}")
+        print("Each participant must have a unique name.")
+        sys.exit(1)
+
+    for participant in participants:
+        name = participant.get("name", "unknown")
+        resolve_image(participant, f"participant '{name}'")
 
     return data
 
@@ -171,11 +177,9 @@ def format_depends_on(services: list) -> str:
 
 def generate_docker_compose(scenario: dict[str, Any]) -> str:
     green = scenario["green_agent"]
-    participant = scenario.get("participant", None)
+    participants = scenario.get("participants", [])
 
-    assert participant is not None, "Participant required"
-
-    participant_names = [participant["name"]]
+    participant_names = [p["name"] for p in participants]
 
     participant_services = "\n".join([
         PARTICIPANT_TEMPLATE.format(
@@ -184,7 +188,7 @@ def generate_docker_compose(scenario: dict[str, Any]) -> str:
             port=DEFAULT_PORT,
             env=format_env_vars(p.get("env", {}))
         )
-        for p in [participant]
+        for p in participants
     ])
 
     all_services = ["green-agent"] + participant_names
@@ -201,17 +205,18 @@ def generate_docker_compose(scenario: dict[str, Any]) -> str:
 
 def generate_a2a_scenario(scenario: dict[str, Any]) -> str:
     green = scenario["green_agent"]
-    participant = scenario.get("participant", None)
+    participants = scenario.get("participants", [])
 
-    assert participant is not None
-
-    participant_lines = [
-        f"[participant]",
-        f"role = \"{participant['name']}\"",
-        f"endpoint = \"http://{participant['name']}:{DEFAULT_PORT}\"",
-    ]
-    if "agentbeats_id" in participant:
-        participant_lines.append(f"agentbeats_id = \"{participant['agentbeats_id']}\"")
+    participant_lines = []
+    for p in participants:
+        lines = [
+            f"[[participants]]",
+            f"role = \"{p['name']}\"",
+            f"endpoint = \"http://{p['name']}:{DEFAULT_PORT}\"",
+        ]
+        if "agentbeats_id" in p:
+            lines.append(f"agentbeats_id = \"{p['agentbeats_id']}\"")
+        participant_lines.append("\n".join(lines) + "\n")
 
     config_section = scenario.get("config", {})
     config_lines = [tomli_w.dumps({"config": config_section})]
