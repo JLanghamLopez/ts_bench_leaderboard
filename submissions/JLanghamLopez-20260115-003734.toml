@@ -1,0 +1,12 @@
+[green_agent]
+agentbeats_id = "019bbd9d-1a8a-7cd2-a043-d6b513e03042"
+env = { LOG_LEVEL = "INFO" }
+
+[[participants]]
+agentbeats_id = "019bbd9e-e229-7542-bee1-232e2e71a78b"
+name = "participant"
+env = { OPENAI_API_KEY = "${OPENAI_API_KEY}" }
+
+[config]
+# "time-series-generation" or "time-series-forecasting"
+task_type = "time-series-forecasting"
