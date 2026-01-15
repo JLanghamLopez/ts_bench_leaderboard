@@ -2,7 +2,7 @@
 agentbeats_id = "019bbd9d-1a8a-7cd2-a043-d6b513e03042"
 env = { LOG_LEVEL = "INFO" }
 
-[participant]
+[[participants]]
 agentbeats_id = ""
 name = "participant"
 env = {}
