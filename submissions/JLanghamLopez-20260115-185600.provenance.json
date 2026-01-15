@@ -1,0 +1,8 @@
+{
+  "image_digests": {
+    "green-agent": "ghcr.io/jlanghamlopez/ts_bench-ts-bench@sha256:ed131171d0d34e63e4790373136b9276470d0347ff063583e1a7bf5da0fcecc8",
+    "participant": "ghcr.io/jlanghamlopez/ts_bench-ts-bench-deterministic@sha256:3b23c31f4d4d1bc89b7a618673059232e8581b746f16a0af5d1fed51e62de68f",
+    "agentbeats-client": "ghcr.io/agentbeats/agentbeats-client@sha256:13dfe3ef4e583a80e7ce2fe3becd0ce3b879841368a7f4fa40b6ebbabeeb014e"
+  },
+  "timestamp": "2026-01-15T18:56:00Z"
+}
