@@ -54,7 +54,32 @@ Generated time-series will be evaluated by comparison to real test trajectories 
   are preserved.
 - AutoCorrelationMetric: Assesses temporal dependence within individual time series components.
 
-In both cases the metric values are mapped to a score in the range `[0, 1]` using `1 / (1 + x)`. 
+### Metric Normalisation
+
+All metrics are assumed to be non-negative. Each raw metric value is mapped to a normalised score in the range `[0, 1]` using the following monotonic transformation: `score = 1 / (1 + a * value^b)` where `value` is the raw metric value, and `a > 0` and `b > 0` are metric-specific normalisation parameters. 
+
+In our conguration, `a = 0` and `b = 0` for all metrics.
+
+### Task-Level Scoring
+
+For a given task, all normalised metric scores are combined using a simple arithmetic mean: `task_score = (1 / K) * sum(score_m)`.
+All metrics within a task are treated equally.
+
+### Aggregation Across Tasks and Difficulty Levels
+
+For each task type (e.g. forecasting or generation), the final score is computed by aggregating task-level scores using difficulty-based weighting.
+
+Each task is assigned a difficulty level with the following fixed weights:
+
+- Easy: 1.0
+- Intermediate: 3.0
+- Advanced: 5.0
+
+The overall score for a task type is given by the weighted average: `overall_score = sum(weight_i * task_score_i) / sum(weight_i)`.
+
+### Ranking
+
+The best model could have the test metrics which is not very close to 0. The purpose of test metrics and scoring is more about ranking the models - the relative ranking of test metrics of different models matter instead of the absolute value of the test metric of a model.
 
 ## Parameters
 
