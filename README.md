@@ -58,7 +58,7 @@ Generated time-series will be evaluated by comparison to real test trajectories 
 
 All metrics are assumed to be non-negative. Each raw metric value is mapped to a normalised score in the range `[0, 1]` using the following monotonic transformation: `score = 1 / (1 + a * value^b)` where `value` is the raw metric value, and `a > 0` and `b > 0` are metric-specific normalisation parameters. 
 
-In our conguration, `a = 0` and `b = 0` for all metrics.
+In our conguration, `a = 1` and `b = 1` for all metrics.
 
 ### Task-Level Scoring
 
@@ -76,10 +76,6 @@ Each task is assigned a difficulty level with the following fixed weights:
 - Advanced: 5.0
 
 The overall score for a task type is given by the weighted average: `overall_score = sum(weight_i * task_score_i) / sum(weight_i)`.
-
-### Ranking
-
-The best model could have the test metrics which is not very close to 0. The purpose of test metrics and scoring is more about ranking the models - the relative ranking of test metrics of different models matter instead of the absolute value of the test metric of a model.
 
 ## Parameters
 
